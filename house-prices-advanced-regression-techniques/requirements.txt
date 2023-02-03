@@ -1,0 +1,6 @@
+ipykernel
+scikit-learn
+category_encoders
+xgboost
+seaborn
+IPython
