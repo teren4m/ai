@@ -47,8 +47,8 @@ def statistics(data: dict):
 def result(num, file):
     create_file(file)
     data: dict = get_results(file)
-    keys = data.keys()
-    index = 1 if len(keys) == 0 else int(max(keys)) + 1
+    keys = [int(key) for key in data.keys()]
+    index = 1 if len(keys) == 0 else max(keys) + 1
     data[index] = get_data(num)
     save_result(data, file)
     return statistics(data)
