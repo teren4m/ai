@@ -24,7 +24,7 @@ def get_time_now():
 
 def save_result(data, file):
     with open(file, "w") as write:
-        json.dump(data, write)
+        json.dump(data, write, indent=4)
 
 
 def get_results(file):
