@@ -1,0 +1,17 @@
+{
+    "max_delta_step": 2.9524240631446736,
+    "eta": 0.8966627703417142,
+    "colsample_bytree": 0.5619714962499023,
+    "colsample_bylevel": 0.19435381332989526,
+    "colsample_bynode": 0.8795985655766999,
+    "max_depth": 3,
+    "learning_rate": 0.08931549936434659,
+    "min_child_weight": 1,
+    "subsample": 0.7528805360814558,
+    "reg_alpha": 0.07262432702022635,
+    "reg_lambda": 0.008553026814499466,
+    "predictor": "cpu_predictor",
+    "num_parallel_tree": 4,
+    "gamma": 0,
+    "n_estimators": 500
+}
