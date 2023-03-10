@@ -1,3 +1,4 @@
 .venv
 my_submission.csv
 __pycache__
+*.db
