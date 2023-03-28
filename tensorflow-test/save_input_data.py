@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 from numba import cuda
 from tensorflow import keras
 import json
+import time
 
 images_folder = Path('../../openCV_python/data/out/resized_frames_predict')
 images_path = list(images_folder.glob('*.png'))
@@ -12,7 +13,7 @@ factor = 20
 input_shape = (59, 40, 3)
 input_shape = (len(images_path), *input_shape)
 input_data = np.zeros(input_shape)
-print(input_shape)
+
 
 def plot_img(img: np.ndarray) -> None:
     plt.figure(figsize=(20, 6))
@@ -37,12 +38,14 @@ def resize_img(path: str) -> np.ndarray:
     # plot_img(gray)
     return resized
 
-out = {}
-for i in range(len(images_path)):
-    print('{} from {}'.format(i, len(images_path) - 1))
-    img = resize_img(images_path[i])
-    out[i] = (str(images_path[i].absolute()), img.tolist())
+
+l = len(images_path)
+for i in range(l):
+    p = images_path[i]
+    img_index = int(p.stem)
+    img = resize_img(p)
+    input_data[img_index] = img
+    print('{} from {} index {}'.format(i, l - 1, img_index))
 
 array_file = 'out/input_data'
-with open(array_file, "w") as fp:
-    json.dump(out, fp)
+np.save(array_file, input_data, allow_pickle=False)

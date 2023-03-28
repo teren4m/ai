@@ -5,12 +5,11 @@ from matplotlib import pyplot as plt
 from numba import cuda
 from tensorflow import keras
 
-input_data_file = np.load('out/input_data')
+input_data = np.load('out/input_data.npy')
 
 cuda.select_device(0)
 cuda.close()
 
-input_data_file
-# result = model.predict(input_data)
-# for result 
-# print(result[0])
+model = keras.models.load_model('out')
+result = model.predict(input_data)
+print(result[0])
