@@ -52,6 +52,9 @@ class Storage():
 
     def get_info_by_key(self, key) -> list[FileInfo]:
         return list(filter(lambda x: x.key == key, self.info))
+    
+    def get_info_by_key_index(self, key, index) -> FileInfo:
+        return list(filter(lambda x: x.key == key and x.index == index, self.info))[0]
 
     def update(self):
         info = list(map(lambda x: x.__dict__, self.info))

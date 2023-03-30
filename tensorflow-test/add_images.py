@@ -68,5 +68,24 @@ def resize_images():
         print(str(i) + ' from ' + str(l - 1))
 
 
+def resize_img_predict(path: str, factor: int):
+    img = cv.imread(str(path), cv.IMREAD_UNCHANGED)
+    width = img.shape[1]
+    height = img.shape[0]
+    resized_width = int(width / factor)
+    resized_height = int(height / factor)
+    dim = (resized_width, resized_height)
+    resized = cv.resize(img, dim, interpolation=cv.INTER_AREA)
+    return resized
+
+def resize_predict():
+    resized_images: list[FileInfo] = fs.get_img_by_key(constant.resized_key)
+    l = len(resized_images)
+    for i in range(l):
+        img_info = resized_images[i]
+        img = resize_img_predict(img_info.path, constant.factor)
+        fs.save_img(constant.resized_predict_key, img_info.index, img, metadata={'factor':str(constant.factor)})
+        print(str(i) + ' from ' + str(l - 1))
 # load_original()
-resize_images()
+# resize_images()
+# resize_predict()
