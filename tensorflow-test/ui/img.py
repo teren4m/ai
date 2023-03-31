@@ -37,7 +37,8 @@ def get_current_image():
     count_filled = len(list(filter(lambda x: x[3], img_info)))
     count_text = ' from {} filled {}'.format(count, count_filled)
     count_label.configure(text=count_text)
-    info_label.configure(text='  {} from {}  '.format(curent_image_index, count))
+    info_label.configure(
+        text='  {} from {}  '.format(curent_image_index, count))
     return img_info[curent_image_index]
 
 
@@ -67,13 +68,16 @@ class DrawFrame(Frame):
 
     predict_points: list[Point] = []
     mark_points: list[Point] = []
-    track_point: Optional[Point]
+    track_index: Optional[Point]
+    is_index_lock: bool = False
+    index: Optional[int]
 
     def __init__(self, frame, width, height, background,):
         self.padding = 0
         self.width = width
         self.height = height
         self.track_point = None
+        self.track_index = None
         super().__init__(
             frame,
             name=image_name,
@@ -104,8 +108,9 @@ class DrawFrame(Frame):
                                 for item in data[mark_index]])
         self.draw()
 
-    def draw_rect(self, points: list[Point], first_point_color: str, color: str, type: str):
+    def draw_rect(self, points: list[Point], first_point_color: str, color: str, type: str, select_index: int = None):
         dot_radius = 2
+        dot_radius_selected = 4
         l = len(points)
         if l > 1:
             for i in range(l):
@@ -115,23 +120,24 @@ class DrawFrame(Frame):
                     self.img_canvas.create_line(
                         prev_point.x, prev_point.y,
                         curr_point.x, curr_point.y,
-                        fill=color, width=1, tags='mark')
+                        fill=color, width=1, tags=type)
                 elif i == 0 and l == 4:
                     prev_point = points[l - 1]
                     curr_point = points[i]
                     self.img_canvas.create_line(
                         prev_point.x, prev_point.y,
                         curr_point.x, curr_point.y,
-                        fill=color, width=1, tags='mark')
+                        fill=color, width=1, tags=type)
         for i in range(l):
             point = points[i]
             point_color = color if i != 0 else first_point_color
+            radius = dot_radius_selected if select_index == i else dot_radius
             self.img_canvas.create_oval(
-                point.x - dot_radius,
-                point.y - dot_radius,
-                point.x + dot_radius,
-                point.y + dot_radius,
-                fill=point_color, width=0, tags='mark')
+                point.x - radius,
+                point.y - radius,
+                point.x + radius,
+                point.y + radius,
+                fill=point_color, width=0, tags=type)
 
     def draw(self):
         self.draw_rect(
@@ -145,10 +151,11 @@ class DrawFrame(Frame):
             self.mark_points,
             'green',
             'red',
-            'mark'
+            'mark',
+            select_index=self.track_index,
         )
 
-        if self.track_point:
+        if self.track_point and not self.is_index_lock:
             prev_point = self.mark_points[-1]
             curr_point = self.track_point
             self.img_canvas.create_line(
@@ -175,15 +182,30 @@ class DrawFrame(Frame):
             self.img_canvas.delete('mark')
             self.draw()
 
-    def track(self, point: Point):
+    def track(self, point: Point, track_index: Optional[int]):
         if len(self.mark_points) == 0 or len(self.mark_points) > 3:
             self.track_point = None
         else:
             self.track_point = point
         self.img_canvas.delete('mark')
+
+        if not self.is_index_lock:
+            self.track_index = track_index
+
+        if self.is_index_lock:
+            self.mark_points[self.track_index] = point
+
         self.draw()
 
     def add_point(self, point: Point):
+        if self.track_index != None and not self.is_index_lock:
+            self.is_index_lock = True
+            return
+
+        if self.is_index_lock:
+            self.is_index_lock = False
+            return
+
         if len(self.mark_points) < 4:
             self.mark_points.append(point)
             self.draw()
@@ -203,9 +225,25 @@ def button_right(event: Event):
     draw_frame.clear_last()
 
 
+def circle_index(point: Point) -> Optional[int]:
+    def is_in_circle(center: Point, point: Point):
+        radius = 4
+        dist = math.sqrt((center.x - point.x) ** 2 + (center.y - point.y) ** 2)
+
+        return dist <= radius
+
+    points = draw_frame.mark_points
+    points_result = [is_in_circle(center, point) for center in points]
+    if any(points_result):
+        return points_result.index(True)
+    else:
+        return None
+
+
 def motion(event: Event):
     if '.container.image.canvas' == str(event.widget):
-        draw_frame.track(Point(x=event.x, y=event.y,))
+        point = Point(x=event.x, y=event.y,)
+        draw_frame.track(point, track_index=circle_index(point))
 
 
 def set_name(name: str):
@@ -239,8 +277,10 @@ def on_key(event: Event):
 
 def on_save():
     name = get_current_image()
-    img_info[curent_image_index] 
-    name[3] = True
+    (p, x, y, _, i) = name
+    y = [[point.x, point.y] for point in draw_frame.mark_points]
+    name = (p, x, y, True, i)
+    img_info[curent_image_index] = name
     on_save_callback(name)
     on_next()
 
@@ -270,7 +310,9 @@ def start_ui(img_data: list, callback):
     global on_save_callback
 
     on_save_callback = callback
-    img_info = img_data
+    not_updated = filter(lambda x: not x[3], img_data)
+    updated = filter(lambda x: x[3], img_data)
+    img_info = [*not_updated, *updated]
 
     size = Size(width=1200, height=1300, bar=50)
     img_height_frame = size.height - size.bar - size.bar
