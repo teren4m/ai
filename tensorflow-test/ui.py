@@ -25,3 +25,5 @@ for i in range(l):
         (Path(images[i].path), images[i].metadata['predict'], mark, is_mark_exist, i))
 
 start_ui(img_data, on_save)
+
+fs.update()

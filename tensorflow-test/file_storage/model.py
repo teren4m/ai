@@ -73,7 +73,6 @@ class Storage():
     def update_metadata(self, key: str, index: int, entry):
         item = list(filter(lambda x: x.key == key and x.index == index, self.info))[0]
         item.metadata[entry[0]] = entry[1]
-        self.update()
 
     def save_file_info(self, new_info: FileInfo):
         self.info.append(new_info)
