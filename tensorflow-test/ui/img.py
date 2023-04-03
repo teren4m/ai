@@ -38,7 +38,7 @@ def get_current_image():
     count_text = ' from {} filled {}'.format(count, count_filled)
     count_label.configure(text=count_text)
     info_label.configure(
-        text='  {} from {}  '.format(curent_image_index, count))
+        text='  {} from {}  '.format(curent_image_index, count - count_filled))
     return img_info[curent_image_index]
 
 
@@ -93,7 +93,8 @@ class DrawFrame(Frame):
         self.img_canvas.place(x=self.padding, y=self.padding, anchor=NW)
 
     def zero(self):
-        self.points.extend([Point(x=0, y=0), Point(
+        self.mark_points.clear()
+        self.mark_points.extend([Point(x=0, y=0), Point(
             x=0, y=0), Point(x=0, y=0), Point(x=0, y=0)])
         self.draw()
 
@@ -227,7 +228,7 @@ def button_right(event: Event):
 
 def circle_index(point: Point) -> Optional[int]:
     def is_in_circle(center: Point, point: Point):
-        radius = 4
+        radius = 10
         dist = math.sqrt((center.x - point.x) ** 2 + (center.y - point.y) ** 2)
 
         return dist <= radius
@@ -314,7 +315,7 @@ def start_ui(img_data: list, callback):
     updated = filter(lambda x: x[3], img_data)
     img_info = [*not_updated, *updated]
 
-    size = Size(width=1200, height=1300, bar=50)
+    size = Size(width=900, height=1300, bar=50)
     img_height_frame = size.height - size.bar - size.bar
     img_height = 1188
     img_width = 800
