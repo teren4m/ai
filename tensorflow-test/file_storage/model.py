@@ -1,7 +1,11 @@
 from pathlib import Path
 import json
 from typing import Optional
-
+import cv2 as cv
+import hashlib
+import uuid
+import numpy as np
+from .db import DBHelper
 
 class FileInfo():
 
@@ -38,10 +42,13 @@ class FileInfo():
 class Storage():
     folder: Path
     info_file: Path
+    collection: str
+    db:DBHelper
 
     info: list[FileInfo]
 
-    def __init__(self, folder: Path) -> None:
+    def __init__(self, folder: Path, collection: str) -> None:
+        self.collection = collection
         self.folder = folder
         self.info_file = folder / 'info.txt'
 
@@ -91,3 +98,32 @@ class Storage():
             self.info = []
         else:
             self.info = self.get_info()
+
+    def save_img(self, key: str, index: int, img: np.ndarray, metadata: dict[str, str] = {}) -> FileInfo:
+        hash = hashlib.sha256(img).hexdigest()
+        find_file_info = self.find_info(hash)
+        if find_file_info:
+            new_info = FileInfo(
+                name=find_file_info.name,
+                index=index,
+                path=find_file_info.path,
+                file_hash=hash,
+                key=key,
+                metadata=metadata,
+            )
+            self.update_info(new_info)
+            return new_info
+
+        id = uuid.uuid4()
+        file_path = self.folder / (str(id) + '.png')
+        file_info = FileInfo(
+            name=str(id),
+            index=index,
+            path=str(file_path),
+            file_hash=hash,
+            key=key,
+            metadata=metadata,
+        )
+        cv.imwrite(str(file_path), img)
+        self.save_file_info(file_info)
+        return file_info
