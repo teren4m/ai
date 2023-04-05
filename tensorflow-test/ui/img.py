@@ -278,9 +278,9 @@ def on_key(event: Event):
 
 def on_save():
     name = get_current_image()
-    (p, x, y, _, i) = name
+    (p, x, y, _, i, n) = name
     y = [[point.x, point.y] for point in draw_frame.mark_points]
-    name = (p, x, y, True, i)
+    name = (p, x, y, True, i, n)
     img_info[curent_image_index] = name
     on_save_callback(name)
     on_next()

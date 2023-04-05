@@ -66,6 +66,30 @@ data_table_get_collection = '''
         c.id
 '''
 
+update_metadata = '''
+    UPDATE 
+        {0}_metadata
+    SET 
+        key = '{2}',
+        value = '{3}'
+    WHERE 
+        name = '{1}' AND key = '{2}';
+'''
+
+select_metadata = '''
+    SELECT 
+        *
+    FROM 
+        {0}_metadata
+    WHERE 
+        name = '{1}' AND key = '{2}';
+'''
+
+insert_metadata = '''
+    INSERT INTO {0}_metadata(name, key, value) 
+    VALUES('{1}', '{2}', '{3}')
+'''
+
 
 def is_table_exist(cur: Cursor, name: str) -> bool:
     sql_query = """SELECT name FROM sqlite_master WHERE type='table';"""
@@ -104,7 +128,7 @@ class DBHelper():
     db_path: str
     con: Connection
     cur: Cursor
-    collection:str
+    collection: str
 
     def __init__(self, db_path: str, collection: str) -> None:
         self.collection = collection
@@ -120,22 +144,42 @@ class DBHelper():
         mapper = CollectionMapper()
         mapper.map(data_list)
         self.cur.executemany(
-            metadata_table_insert.format(self.collection), 
+            metadata_table_insert.format(self.collection),
             mapper.metadata
-            )
+        )
         self.cur.executemany(
-            collection_table_insert.format(self.collection), 
+            collection_table_insert.format(self.collection),
             mapper.collection
-            )
+        )
         self.con.commit()
 
-    def get(self,name: str):
+    def get(self, name: str):
         self.cur.execute(data_table_get.format(self.collection), [name])
         return self.cur.fetchall()
 
     def get_list(self) -> list:
         self.cur.execute(data_table_get_collection.format(self.collection))
         return self.cur.fetchall()
+
+    def update_metadata(self, name: str, key: str, value: str):
+        query = select_metadata.format(
+            self.collection, name, key, value)
+        self.cur.execute(query)
+        x = self.cur.fetchall()
+        if len(x):
+            query = update_metadata.format(
+                self.collection, name, key, value)
+        else:
+            query = insert_metadata.format(
+                self.collection, name, key, value)
+        
+        print(query)
+        self.cur.execute(query)
+        self.con.commit()
+
+    def update(self, query:str):
+        self.cur.execute(query)
+        self.con.commit()
 
     def close(self):
         self.con.close()

@@ -7,6 +7,7 @@ import uuid
 import numpy as np
 from .db import DBHelper
 
+
 class FileInfo():
 
     def __init__(
@@ -14,21 +15,18 @@ class FileInfo():
             name: str,
             index: int,
             path: str,
-            file_hash: str,
-            key: str,
+            collection: str,
             metadata: dict[str, str],
     ) -> None:
         self.name = name
         self.index = index
         self.path = path
-        self.file_hash = file_hash
-        self.key = key
+        self.collection = collection
         self.metadata = metadata
 
     name: str
     index: int
     path: str
-    file_hash: str
     key: str
     metadata: dict[str, str]
 
@@ -39,33 +37,49 @@ class FileInfo():
         return str(self.__dict__)
 
 
+class FileInfoListMapper:
+
+    def map(self, data: list, collection:str) -> list[FileInfo]:
+        temp = {}
+        for item in data:
+            file_info = FileInfo(name=item[1],path=item[2],index=item[0],collection=collection,metadata={})
+            temp[file_info.index] = file_info
+        for item in data:
+            file_info:FileInfo = temp[item[0]]
+            key = item[-2]
+            value = item[-1]
+            file_info.metadata[key] = json.loads(value)
+        return list(temp.values())
+
+
 class Storage():
     folder: Path
-    info_file: Path
+    info_file: str
     collection: str
-    db:DBHelper
-
-    info: list[FileInfo]
+    db: DBHelper
 
     def __init__(self, folder: Path, collection: str) -> None:
         self.collection = collection
         self.folder = folder
-        self.info_file = folder / 'info.txt'
+        self.info_file = str(folder / 'file_info.db')
 
     def get_info(self) -> list[FileInfo]:
         txt = self.info_file.read_text().replace('\n', '')
         info: list = json.loads(txt)
         return [FileInfo(**item) for item in info]
 
-    def get_info_by_key(self, key) -> list[FileInfo]:
-        return list(filter(lambda x: x.key == key, self.info))
-    
+    def get_info_by_key(self) -> list[FileInfo]:
+        mapper = FileInfoListMapper()
+        result = self.db.get_list()
+        return mapper.map(result, self.collection)
+
     def get_info_by_key_index(self, key, index) -> FileInfo:
         return list(filter(lambda x: x.key == key and x.index == index, self.info))[0]
 
     def update(self):
-        info = list(map(lambda x: x.__dict__, self.info))
-        self.info_file.write_text(json.dumps(info, indent=4))
+        pass
+        # info = list(map(lambda x: x.__dict__, self.info))
+        # self.info_file.write_text(json.dumps(info, indent=4))
 
     def update_info(self, file_info: FileInfo):
         find_items = list(filter(lambda x: file_info.name ==
@@ -77,9 +91,9 @@ class Storage():
             self.info.append(file_info)
         self.update()
 
-    def update_metadata(self, key: str, index: int, entry):
-        item = list(filter(lambda x: x.key == key and x.index == index, self.info))[0]
-        item.metadata[entry[0]] = entry[1]
+    def update_metadata(self, name: str, entry):
+        value = json.dumps(entry[1])
+        self.db.update_metadata(name, entry[0], value)
 
     def save_file_info(self, new_info: FileInfo):
         self.info.append(new_info)
@@ -93,11 +107,11 @@ class Storage():
             return None
 
     def init(self):
-        if not self.info_file.exists():
-            self.info_file.write_text('[]')
-            self.info = []
-        else:
-            self.info = self.get_info()
+        self.db = DBHelper(self.info_file, self.collection)
+        self.db.init()
+
+    def close(self):
+        self.db.close()
 
     def save_img(self, key: str, index: int, img: np.ndarray, metadata: dict[str, str] = {}) -> FileInfo:
         hash = hashlib.sha256(img).hexdigest()
