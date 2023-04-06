@@ -76,6 +76,16 @@ update_metadata = '''
         name = '{1}' AND key = '{2}';
 '''
 
+update_metadata_by_index = '''
+    UPDATE
+        {0}_metadata
+    SET
+        key = '{2}',
+        value = '{3}'
+    WHERE
+        name = (SELECT name FROM resized WHERE id={1}) AND key = '{2}'
+'''
+
 select_metadata = '''
     SELECT 
         *
@@ -175,6 +185,22 @@ class DBHelper():
         
         print(query)
         self.cur.execute(query)
+        self.con.commit()
+
+    def update_metadata_by_index(self, index: int, key: str, value: str):
+        query = update_metadata_by_index.format(
+            self.collection, index, key, value)
+        self.cur.execute(query)
+        # x = self.cur.fetchall()
+        # if len(x):
+        #     query = update_metadata.format(
+        #         self.collection, name, key, value)
+        # else:
+        #     query = insert_metadata.format(
+        #         self.collection, name, key, value)
+        
+        # print(query)
+        # self.cur.execute(query)
         self.con.commit()
 
     def update(self, query:str):

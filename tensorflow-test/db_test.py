@@ -26,10 +26,10 @@ db.update(
     UPDATE
         resized_metadata
     SET
-        key = 'mark',
-        value = '[[84, 245], [233, 390], [151, 689], [114, 323]]'
+        key = 'predict',
+        value = '[[146, 336], [199, 363], [148, 476], [91, 444]]'
     WHERE
-        name = '0f346758-60b7-46c6-a05c-ec8f0e7979f7' AND key = 'mark'
+        name = (SELECT name FROM resized WHERE id=1) AND key = 'predict'
     '''
 )
 

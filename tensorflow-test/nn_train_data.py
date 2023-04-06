@@ -7,7 +7,6 @@ import json
 import add_images as img_util
 import numpy as np
 
-index_map_file = Path('data/index_map.txt')
 folder = Path('/files_storage')
 storage = model.Storage(folder, constant.resized_key)
 storage.init()
@@ -21,15 +20,6 @@ mixed_mark_images: list[model.FileInfo] = []
 for i in range(l):
     index = random.randrange(len(mark_images))
     mixed_mark_images.append(mark_images.pop(index))
-
-
-index_map = {}
-for i in range(l):
-    index_map[i] = mixed_mark_images[i].index
-
-# index_map_file.write_text(
-#     json.dumps(index_map, indent=4)
-# )
 
 img: np.ndarray = img_util.resize_img_predict(
     mixed_mark_images[0].path, constant.factor)
@@ -48,7 +38,19 @@ for i in range(l):
     train_output[i] = np.array(mark_array)
     print('{} from {}'.format(i, l - 1))
 
+l = len(images)
+predict_input_shape = (l, *img.shape)
+predict_input = np.zeros(predict_input_shape)
+for i in range(l):
+    img_info = images[i]
+    index = img_info.index - 1
+    predict_input[index] = img_util.resize_img_predict(
+        img_info.path, constant.factor)
+    print('{} index {}'.format(i, index))
+
+print(predict_input_shape)
 print(train_input.shape)
 
+np.save('data/predict_input', predict_input, allow_pickle=False)
 np.save('data/train_input', train_input, allow_pickle=False)
 np.save('data/train_output', train_output, allow_pickle=False)

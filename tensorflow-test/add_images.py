@@ -76,6 +76,7 @@ def resize_img_predict(path: str, factor: int):
     resized_height = int(height / factor)
     dim = (resized_width, resized_height)
     resized = cv.resize(img, dim, interpolation=cv.INTER_AREA)
+    resized = cv.cvtColor(resized, cv.COLOR_BGR2GRAY)
     return resized
 
 def resize_predict():

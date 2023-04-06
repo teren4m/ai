@@ -28,6 +28,10 @@ for i in range(l):
 
 images = images_shuffle
 
+# images = images[0:1]
+# print(images)
+# l = len(images)
+
 img_data = []
 for i in range(l):
     is_mark_exist = 'mark' in images[i].metadata.keys()

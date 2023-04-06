@@ -95,6 +95,10 @@ class Storage():
         value = json.dumps(entry[1])
         self.db.update_metadata(name, entry[0], value)
 
+    def update_metadata_by_index(self, index: int, entry):
+        value = json.dumps(entry[1])
+        self.db.update_metadata_by_index(index, entry[0], value)
+
     def save_file_info(self, new_info: FileInfo):
         self.info.append(new_info)
         self.update()
@@ -114,30 +118,31 @@ class Storage():
         self.db.close()
 
     def save_img(self, key: str, index: int, img: np.ndarray, metadata: dict[str, str] = {}) -> FileInfo:
-        hash = hashlib.sha256(img).hexdigest()
-        find_file_info = self.find_info(hash)
-        if find_file_info:
-            new_info = FileInfo(
-                name=find_file_info.name,
-                index=index,
-                path=find_file_info.path,
-                file_hash=hash,
-                key=key,
-                metadata=metadata,
-            )
-            self.update_info(new_info)
-            return new_info
+        pass
+        # hash = hashlib.sha256(img).hexdigest()
+        # find_file_info = self.find_info(hash)
+        # if find_file_info:
+        #     new_info = FileInfo(
+        #         name=find_file_info.name,
+        #         index=index,
+        #         path=find_file_info.path,
+        #         file_hash=hash,
+        #         key=key,
+        #         metadata=metadata,
+        #     )
+        #     self.update_info(new_info)
+        #     return new_info
 
-        id = uuid.uuid4()
-        file_path = self.folder / (str(id) + '.png')
-        file_info = FileInfo(
-            name=str(id),
-            index=index,
-            path=str(file_path),
-            file_hash=hash,
-            key=key,
-            metadata=metadata,
-        )
-        cv.imwrite(str(file_path), img)
-        self.save_file_info(file_info)
-        return file_info
+        # id = uuid.uuid4()
+        # file_path = self.folder / (str(id) + '.png')
+        # file_info = FileInfo(
+        #     name=str(id),
+        #     index=index,
+        #     path=str(file_path),
+        #     file_hash=hash,
+        #     key=key,
+        #     metadata=metadata,
+        # )
+        # cv.imwrite(str(file_path), img)
+        # self.save_file_info(file_info)
+        # return file_info
