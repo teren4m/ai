@@ -3,7 +3,6 @@ from file_storage import model
 import constant
 from pathlib import Path
 import random
-import json
 import add_images as img_util
 import numpy as np
 

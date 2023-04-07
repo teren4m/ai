@@ -292,7 +292,7 @@ def on_clear():
 
 def on_copy():
     name = get_current_image()
-    pc.copy(name)
+    pc.copy(str(name[0]))
 
 
 def start_ui(img_data: list, callback):

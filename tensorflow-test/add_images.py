@@ -8,6 +8,28 @@ import numpy as np
 
 video_path = Path('../../openCV_python/data/video')
 
+def transform(img: np.ndarray) -> np.ndarray:
+    # rgb_planes = cv.split(img)
+
+    # result_planes = []
+    # result_norm_planes = []
+    # for plane in rgb_planes:
+    #     dilated_img = cv.dilate(plane, np.ones((7,7), np.uint8))
+    #     bg_img = cv.medianBlur(dilated_img, 21)
+    #     diff_img = 255 - cv.absdiff(plane, bg_img)
+    #     norm_img = cv.normalize(diff_img,None, alpha=0, beta=255, norm_type=cv.NORM_MINMAX, dtype=cv.CV_8UC1)
+    #     # result_planes.append(diff_img)
+    #     result_norm_planes.append(norm_img)
+    
+    # # img = cv.merge(result_planes)
+    # img = cv.merge(result_norm_planes)
+
+    img = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
+    # ksize = (5,1)
+    # img = cv.blur(img, ksize) 
+
+    return img
+
 
 def resize_img(path: str):
     path = str(path)
@@ -75,8 +97,8 @@ def resize_img_predict(path: str, factor: int):
     resized_width = int(width / factor)
     resized_height = int(height / factor)
     dim = (resized_width, resized_height)
+    img = transform(img)
     resized = cv.resize(img, dim, interpolation=cv.INTER_AREA)
-    resized = cv.cvtColor(resized, cv.COLOR_BGR2GRAY)
     return resized
 
 def resize_predict():

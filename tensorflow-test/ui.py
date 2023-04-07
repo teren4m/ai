@@ -42,3 +42,4 @@ for i in range(l):
 start_ui(img_data, on_save)
 
 storage.close()
+
