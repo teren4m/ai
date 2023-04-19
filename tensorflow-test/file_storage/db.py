@@ -1,6 +1,26 @@
 import sqlite3
 from sqlite3 import Cursor, Connection
 import json
+from typing import Optional
+
+hash_table_create = '''
+    CREATE TABLE IF NOT EXISTS hash (
+	    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	    path TEXT NOT NULL UNIQUE,
+	    hash TEXT NOT NULL UNIQUE
+    );
+    '''
+
+hash_table_select = '''
+    SELECT path 
+    FROM hash
+    WHERE hash='{}'
+'''
+
+hash_insert = '''
+    INSERT INTO hash(path, hash) 
+    VALUES(?, ?)
+'''
 
 metadata_table_create = '''
     CREATE TABLE IF NOT EXISTS {}_metadata (
@@ -32,6 +52,12 @@ collection_table_insert = '''
 collection_table_get = '''
     SELECT *
     FROM {} AS c
+'''
+
+collection_table_get_by_name = '''
+    SELECT *
+    FROM {}
+    WHERE name='{}'
 '''
 
 data_table_get = '''
@@ -149,6 +175,7 @@ class DBHelper():
         self.cur = self.con.cursor()
         self.cur.execute(metadata_table_create.format(self.collection))
         self.cur.execute(collection_table_create.format(self.collection))
+        self.cur.execute(hash_table_create)
 
     def insert(self, data_list: list[dict]):
         mapper = CollectionMapper()
@@ -206,6 +233,19 @@ class DBHelper():
     def update(self, query:str):
         self.cur.execute(query)
         self.con.commit()
+
+    def save_hash(self, hash:str, path:str):
+        self.cur.execute(hash_insert, [path, hash])
+        self.con.commit()
+
+    def get_path_by_hash(self, hash:str)-> Optional[str]:
+        query = hash_table_select.format(hash)
+        self.cur.execute(query)
+        result: list = self.cur.fetchall()
+        if len(result):
+            return result[0][0]
+        else:
+            return None
 
     def close(self):
         self.con.close()

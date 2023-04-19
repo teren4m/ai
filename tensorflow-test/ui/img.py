@@ -38,7 +38,9 @@ def get_current_image():
     count_text = ' from {} filled {}'.format(count, count_filled)
     count_label.configure(text=count_text)
     info_label.configure(
-        text='  {} from {}  '.format(curent_image_index, count - count_filled))
+        text='  {} from {}  '.format(curent_image_index, count))
+    metadata = img_info[curent_image_index][-1]
+    print(metadata)
     return img_info[curent_image_index]
 
 
@@ -109,11 +111,11 @@ class DrawFrame(Frame):
                                 for item in data[mark_index]])
         self.draw()
 
-    def draw_rect(self, points: list[Point], first_point_color: str, color: str, type: str, select_index: int = None):
+    def draw_rect(self, points: list[Point], first_point_color: str, color: str, type: str, select_index: int = None, draw_lines=True):
         dot_radius = 2
         dot_radius_selected = 4
         l = len(points)
-        if l > 1:
+        if l > 1 and draw_lines:
             for i in range(l):
                 if i != 0:
                     prev_point = points[i - 1]
@@ -132,6 +134,7 @@ class DrawFrame(Frame):
         for i in range(l):
             point = points[i]
             point_color = color if i != 0 else first_point_color
+            point_color = 'orange' if i == 1 else point_color
             radius = dot_radius_selected if select_index == i else dot_radius
             self.img_canvas.create_oval(
                 point.x - radius,
@@ -156,7 +159,94 @@ class DrawFrame(Frame):
             select_index=self.track_index,
         )
 
-        if self.track_point and not self.is_index_lock:
+        def center(line):
+            x1 = line[0][0]
+            x2 = line[1][0]
+            y1 = line[0][1]
+            y2 = line[1][1]
+            return Point(x=int((x1+x2)/2), y=int((y1+y2)/2),)
+
+        def get_lines(points):
+            l = len(points)
+            last_index = l - 1
+            lines = []
+            for i in range(l):
+                if i == last_index:
+                    lines.append((points[i], points[0]))
+                else:
+                    lines.append((points[i], points[i + 1]))
+            return lines
+
+        def merge_points(x: list, y: list):
+            all_points = []
+            [all_points.extend(line) for line in zip(x, y)]
+            return all_points
+
+        def add_points(points):
+            lines = get_lines(points)
+            center_points = [center(line) for line in lines]
+            return merge_points(points, center_points)
+        
+        def extend_by_point(center, point):
+            if point == (0,0):
+                return [0,0]
+            if center == (0,0):
+                return [0,0]
+            x1 = center[0]
+            y1 = center[1]
+
+            x2 = point[0]
+            y2 = point[1]
+
+            v = [x2-x1, y2-y1]
+
+            v_l = math.sqrt(v[0]**2 + v[1]**2)
+            v_norm = [v[0]/v_l,v[1]/v_l]
+            dist = v_l + 10
+            x= int(v_norm[0] * dist + x1)
+            y = int(v_norm[1] * dist + y1)
+            return [x,y]
+        
+        def extend_by_points(center, points):
+            return [extend_by_point(center, x) for x in points]
+
+        def center_of_lines(points):
+            all_points = add_points(points)
+
+            center_of_points = Point(
+                x=int((all_points[3][0] + all_points[7][0])/2),
+                y=int((all_points[3][1] + all_points[7][1])/2),
+            )
+
+            all_points = add_points(all_points)
+            # all_points = add_points(all_points)
+            # all_points = add_points(all_points)
+
+            # mid_points = [center((point, center_of_points)) for point in all_points]
+
+            # mid2_points = [center(line) for line in zip(all_points, mid_points)]
+
+            # mid3_points = [center(line) for line in zip(all_points, mid2_points)]
+
+            extended = [Point(x=p[0],y=p[1],) for p in extend_by_points(center_of_points, all_points)]
+
+            return [*extended, center_of_points]
+
+        def extend_points(points):
+            return center_of_lines(points)
+
+        def extend_marks():
+            self.draw_rect(
+                center_of_lines(self.mark_points),
+                'yellow',
+                'yellow',
+                'add',
+                draw_lines=False,
+            )
+        if len(self.mark_points) == 4:
+            extend_marks()
+
+        if len(self.mark_points) and self.track_point and not self.is_index_lock:
             prev_point = self.mark_points[-1]
             curr_point = self.track_point
             self.img_canvas.create_line(
@@ -181,6 +271,7 @@ class DrawFrame(Frame):
         if len(self.mark_points):
             self.mark_points.pop()
             self.img_canvas.delete('mark')
+            self.img_canvas.delete('add')
             self.draw()
 
     def track(self, point: Point, track_index: Optional[int]):
@@ -189,6 +280,7 @@ class DrawFrame(Frame):
         else:
             self.track_point = point
         self.img_canvas.delete('mark')
+        self.img_canvas.delete('add')
 
         if not self.is_index_lock:
             self.track_index = track_index
@@ -272,15 +364,20 @@ def on_whitespace():
 
 
 def on_key(event: Event):
+    print(event.keycode)
     if event.keycode == 32:
         on_whitespace()
+    if event.keycode == 39:
+        on_next()
+    if event.keycode == 37:
+        on_prev()
 
 
 def on_save():
     name = get_current_image()
-    (p, x, y, _, i, n) = name
+    (p, x, y, _, i, n, m) = name
     y = [[point.x, point.y] for point in draw_frame.mark_points]
-    name = (p, x, y, True, i, n)
+    name = (p, x, y, True, i, n, m)
     img_info[curent_image_index] = name
     on_save_callback(name)
     on_next()

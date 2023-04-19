@@ -22,7 +22,7 @@ for i in range(l):
     result = result_list[i]
     index = i + 1
     result = list(zip(*(iter(result),) * 2))
-    result_predict = [[int(item[0]), int(item[1])] for item in result]
+    result_predict = [[int(item[0]), int(item[1])] for item in result][0:4]
     key = 'predict'
     storage.update_metadata_by_index(index, (key, result_predict))
     print('{} from {}'.format(i, l-1))

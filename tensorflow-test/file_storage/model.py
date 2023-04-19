@@ -12,20 +12,20 @@ class FileInfo():
 
     def __init__(
             self,
+            id:int,
             name: str,
-            index: int,
             path: str,
             collection: str,
             metadata: dict[str, str],
     ) -> None:
+        self.id = id
         self.name = name
-        self.index = index
         self.path = path
         self.collection = collection
         self.metadata = metadata
 
+    id:int
     name: str
-    index: int
     path: str
     key: str
     metadata: dict[str, str]
@@ -42,8 +42,8 @@ class FileInfoListMapper:
     def map(self, data: list, collection:str) -> list[FileInfo]:
         temp = {}
         for item in data:
-            file_info = FileInfo(name=item[1],path=item[2],index=item[0],collection=collection,metadata={})
-            temp[file_info.index] = file_info
+            file_info = FileInfo(id = item[0], name=item[1],path=item[2],collection=collection,metadata={})
+            temp[file_info.id] = file_info
         for item in data:
             file_info:FileInfo = temp[item[0]]
             key = item[-2]
@@ -76,11 +76,6 @@ class Storage():
     def get_info_by_key_index(self, key, index) -> FileInfo:
         return list(filter(lambda x: x.key == key and x.index == index, self.info))[0]
 
-    def update(self):
-        pass
-        # info = list(map(lambda x: x.__dict__, self.info))
-        # self.info_file.write_text(json.dumps(info, indent=4))
-
     def update_info(self, file_info: FileInfo):
         find_items = list(filter(lambda x: file_info.name ==
                                  x.name and file_info.key == x.key, self.info))
@@ -103,13 +98,6 @@ class Storage():
         self.info.append(new_info)
         self.update()
 
-    def find_info(self, hash: str) -> Optional[FileInfo]:
-        filtered_info = list(filter(lambda x: x.file_hash == hash, self.info))
-        if len(filtered_info):
-            return filtered_info[0]
-        else:
-            return None
-
     def init(self):
         self.db = DBHelper(self.info_file, self.collection)
         self.db.init()
@@ -117,32 +105,30 @@ class Storage():
     def close(self):
         self.db.close()
 
-    def save_img(self, key: str, index: int, img: np.ndarray, metadata: dict[str, str] = {}) -> FileInfo:
-        pass
-        # hash = hashlib.sha256(img).hexdigest()
-        # find_file_info = self.find_info(hash)
-        # if find_file_info:
-        #     new_info = FileInfo(
-        #         name=find_file_info.name,
-        #         index=index,
-        #         path=find_file_info.path,
-        #         file_hash=hash,
-        #         key=key,
-        #         metadata=metadata,
-        #     )
-        #     self.update_info(new_info)
-        #     return new_info
+    def create_file(self, img: np.ndarray) -> str:
+        id = uuid.uuid4()
+        file_path = str(self.folder / (str(id) + '.png'))
+        cv.imwrite(file_path, img)
+        return file_path
 
-        # id = uuid.uuid4()
-        # file_path = self.folder / (str(id) + '.png')
-        # file_info = FileInfo(
-        #     name=str(id),
-        #     index=index,
-        #     path=str(file_path),
-        #     file_hash=hash,
-        #     key=key,
-        #     metadata=metadata,
-        # )
-        # cv.imwrite(str(file_path), img)
-        # self.save_file_info(file_info)
-        # return file_info
+    def save_img(self, img: np.ndarray, metadata: dict[str, str] = {}) -> FileInfo:
+        hash = hashlib.sha256(img).hexdigest()
+        path = self.db.get_path_by_hash(hash)
+        if not path:
+            path = self.create_file(img)
+            self.db.save_hash(hash, path)
+            print('save {}'.format(path))
+
+        p = Path(path)
+        name = p.stem
+        
+        if not len(self.db.get(name)):
+            file_info = FileInfo(
+                1, name, str(p), self.collection, metadata
+            )
+            self.db.insert([
+                    file_info.__dict__
+            ])
+        else:
+            print('{} exist'.format(name))
+           
