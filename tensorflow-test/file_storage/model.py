@@ -131,4 +131,7 @@ class Storage():
             ])
         else:
             print('{} exist'.format(name))
+
+    def remove_by_id(self, id:int):
+        self.db.remove_by_id(id)
            

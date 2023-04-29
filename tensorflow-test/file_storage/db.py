@@ -3,6 +3,7 @@ from sqlite3 import Cursor, Connection
 import json
 from typing import Optional
 
+
 hash_table_create = '''
     CREATE TABLE IF NOT EXISTS hash (
 	    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -44,6 +45,11 @@ collection_table_create = '''
         FOREIGN KEY (name) REFERENCES metadata ON DELETE CASCADE ON UPDATE CASCADE
     );
     '''
+
+collection_delete_by_id = '''
+    DELETE FROM {}
+    WHERE id = ?
+'''
 
 collection_table_insert = '''
     INSERT INTO {}(name, path) 
@@ -246,6 +252,11 @@ class DBHelper():
             return result[0][0]
         else:
             return None
+        
+    def remove_by_id(self, id: int):
+        query = collection_delete_by_id.format(self.collection)
+        self.cur.execute(query, [id])
+        self.con.commit()
 
     def close(self):
         self.con.close()

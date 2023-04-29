@@ -105,6 +105,9 @@ train_input = np.zeros(shape)
 train_output = np.zeros((l, point_count))
 for i in range(l):
     img_info = mixed_mark_images[i]
+    # print(img_info.name)
+    # print(img_info.id)
+    # print(img_info.metadata)
     train_input[i] = img_util.resize_img_predict(
         img_info.path, constant.factor)
     mark = img_info.metadata['mark']
@@ -120,17 +123,16 @@ for i in range(l):
 l = len(images)
 predict_input_shape = (l, *img.shape)
 predict_input = np.zeros(predict_input_shape)
-for i in range(l):
-    img_info = images[i]
-    index = img_info.id - 1
-    if img_info.path != '\\':
-        predict_input[index] = img_util.resize_img_predict(
-            img_info.path, constant.factor)
-    print('{} index {}'.format(i, l-1))
+# for i in range(l):
+#     img_info = images[i]
+#     index = img_info.id - 1
+#     predict_input[index] = img_util.resize_img_predict(
+#             img_info.path, constant.factor)
+#     print('{} index {}'.format(i, l-1))
 
 print(predict_input_shape)
 print(train_input.shape)
 
-np.save('data/predict_input', predict_input, allow_pickle=False)
+# np.save('data/predict_input', predict_input, allow_pickle=False)
 np.save('data/train_input', train_input, allow_pickle=False)
 np.save('data/train_output', train_output, allow_pickle=False)
