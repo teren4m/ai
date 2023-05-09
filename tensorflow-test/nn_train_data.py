@@ -7,7 +7,7 @@ import add_images as img_util
 import numpy as np
 import math
 
-point_count = 66
+point_count = 82
 
 def center(line):
     x1 = line[0][0]
@@ -66,7 +66,7 @@ def center_of_lines(points):
         int((all_points[3][1] + all_points[7][1])/2),
     )
 
-    # all_points = add_points(all_points)
+    all_points = add_points(all_points)
     # all_points = add_points(all_points)
     # all_points = add_points(all_points)
 
@@ -78,7 +78,7 @@ def center_of_lines(points):
 
     extended = [[p[0],p[1]] for p in extend_by_points(center_of_points, all_points)]
 
-    return [*points, *extended, *all_points, *mid3_points, center_of_points]
+    return [*points, *all_points, *mid3_points, center_of_points]
 
 def extend_points(points):
     return center_of_lines(points)

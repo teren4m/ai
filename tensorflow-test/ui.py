@@ -49,18 +49,18 @@ l = len(images)
 #         error = tf.keras.metrics.mean_absolute_error(img.metadata['mark'], img.metadata['predict'])
 #         img.metadata['error'] = error.numpy()
 
-# images_shuffle = []
+images_shuffle = []
 
-# for i in range(l):
-#     index = random.randrange(len(images))
-#     images_shuffle.append(images.pop(index))
+for i in range(l):
+    index = random.randrange(len(images))
+    images_shuffle.append(images.pop(index))
 
-# images = images_shuffle
+images = images_shuffle
 
 # images = [img for img in images if 'condition' in img.metadata.keys() and img.metadata['condition'] == 'bad']
 # images = [img for img in images if 'condition' not in img.metadata.keys()]
-# images = [img for img in images if 'mark' not in img.metadata.keys()]
-images = [img for img in images if 'epoch' in img.metadata.keys() and 'mark' not in img.metadata.keys()]
+images = [img for img in images if 'mark' not in img.metadata.keys()]
+# images = [img for img in images if 'epoch' in img.metadata.keys() and 'mark' not in img.metadata.keys()]
 # images = [img for img in images if 'mark' in img.metadata.keys()]
 
 

@@ -219,7 +219,7 @@ class DrawFrame(Frame):
             )
 
             all_points = add_points(all_points)
-            # all_points = add_points(all_points)
+            all_points = add_points(all_points)
             # all_points = add_points(all_points)
 
             # mid_points = [center((point, center_of_points)) for point in all_points]
@@ -230,7 +230,7 @@ class DrawFrame(Frame):
 
             extended = [Point(x=p[0],y=p[1],) for p in extend_by_points(center_of_points, all_points)]
 
-            return [*extended, center_of_points]
+            return [center_of_points]
 
         def extend_points(points):
             return center_of_lines(points)
