@@ -21,22 +21,24 @@ storage.init()
 
 images = storage.get_info_by_key()
 
+
+# t.save_train_data(images)
 # t.save_predict_data(images)
-t.save_train_data(images)
 
 m.train(
-    batch_size=50,
+    batch_size=40,
     epoch_size=1000 ,
-    conv_factor=64,
-    dense_base=1024,
-    sma=150,
+    conv_factor=190,
+    dense_base=128,
+    sma=50,
+    remove = 100,
 )
 
-p.predict(storage)
+# p.predict(storage)
 
 
 winsound.PlaySound("SystemExit", winsound.SND_ALIAS)
-play_music()
+# play_music()
 
 diff_time = int(time.time() - prev)
 td = timedelta(seconds=diff_time)

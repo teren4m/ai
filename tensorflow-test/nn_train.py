@@ -6,8 +6,10 @@ import random
 import add_images as img_util
 import numpy as np
 import math
+import tensorflow as tf
 
-point_count = 82
+point_count = 26
+
 
 def center(line):
     x1 = line[0][0]
@@ -15,6 +17,7 @@ def center(line):
     y1 = line[0][1]
     y2 = line[1][1]
     return [int((x1+x2)/2), int((y1+y2)/2)]
+
 
 def get_lines(points):
     l = len(points)
@@ -27,19 +30,22 @@ def get_lines(points):
             lines.append((points[i], points[i + 1]))
     return lines
 
-def merge_points(x:list,y:list):
+
+def merge_points(x: list, y: list):
     all_points = []
     [all_points.extend(line) for line in zip(x, y)]
     return all_points
 
+
 def add_points(points):
     lines = get_lines(points)
     center_points = [center(line) for line in lines]
-    return merge_points(points, center_points)
+    return center_points
+
 
 def extend_by_point(center, point):
-    if point == [0,0]:
-        return [0,0]
+    if point == [0, 0]:
+        return [0, 0]
     x1 = center[0]
     y1 = center[1]
 
@@ -51,22 +57,24 @@ def extend_by_point(center, point):
     v_l = math.sqrt(v[0]**2 + v[1]**2)
     v_norm = [v[0]/v_l, v[1]/v_l]
     dist = v_l + 10
-    x= int(v_norm[0] * dist + x1)
+    x = int(v_norm[0] * dist + x1)
     y = int(v_norm[1] * dist + y1)
-    return [x,y]
-        
+    return [x, y]
+
+
 def extend_by_points(center, points):
     return [extend_by_point(center, x) for x in points]
+
 
 def center_of_lines(points):
     all_points = add_points(points)
 
     center_of_points = (
-        int((all_points[3][0] + all_points[7][0])/2),
-        int((all_points[3][1] + all_points[7][1])/2),
+        int((all_points[1][0] + all_points[3][0])/2),
+        int((all_points[1][1] + all_points[3][1])/2),
     )
 
-    all_points = add_points(all_points)
+    # all_points = add_points(all_points)
     # all_points = add_points(all_points)
     # all_points = add_points(all_points)
 
@@ -76,13 +84,14 @@ def center_of_lines(points):
 
     mid3_points = [center(line) for line in zip(all_points, mid2_points)]
 
-    extended = [[p[0],p[1]] for p in extend_by_points(center_of_points, all_points)]
+    extended = [[p[0], p[1]]
+                for p in extend_by_points(center_of_points, all_points)]
 
-    return [*points, *all_points, *mid3_points, center_of_points]
+    return [*all_points, *mid_points, center_of_points]
+
 
 def extend_points(points):
     return center_of_lines(points)
-
 
 
 # print(predict_input_shape)
@@ -101,9 +110,25 @@ def save_predict_data(images):
         img_info = images[i]
         index = img_info.id - 1
         predict_input[index] = img_util.resize_img_predict(
-                img_info.path, constant.factor)
+            img_info.path, constant.factor)
         print('{} predict data from {}'.format(i, l-1), end="\r")
     np.save('data/predict_input', predict_input, allow_pickle=False)
+
+
+def normalize(x, max):
+    std = np.std([0, max])
+    mean = np.mean([0, max])
+    return (x - mean) / std
+
+
+def denormalize(x, max):
+    std = np.std([0, max])
+    mean = np.mean([0, max])
+    return x * std + mean
+
+
+def norm_point(p):
+    return [normalize(p[0], 800), normalize(p[1], 1188)]
 
 
 def save_train_data(images):
@@ -113,7 +138,7 @@ def save_train_data(images):
 
     img: np.ndarray = img_util.resize_img_predict(
         mark_images[0].path, constant.factor)
-    
+
     shape = (l, *img.shape)
     train_input = np.zeros(shape)
     train_output = np.zeros((l, point_count))
@@ -126,14 +151,15 @@ def save_train_data(images):
         train_input[i] = img_util.resize_img_predict(
             img_info.path, constant.factor)
         mark = img_info.metadata['mark']
-
         extended_marks = [*mark, *extend_points(mark)]
 
         mark_array = []
-        [mark_array.extend(item) for item in extended_marks]
-
+        [mark_array.extend(norm_point(item)) for item in extended_marks]
         train_output[i] = np.array(mark_array)
         print('{} train data from {}'.format(i, l - 1), end="\r")
 
     np.save('data/train_input', train_input, allow_pickle=False)
+
+    
+    print(train_output[0])
     np.save('data/train_output', train_output, allow_pickle=False)

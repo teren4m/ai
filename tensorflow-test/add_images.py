@@ -45,8 +45,8 @@ def transform_blur(img: np.ndarray) -> np.ndarray:
     # img = cv.merge(result_norm_planes)
 
     img = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
-    ksize = (3,3)
-    img = cv.blur(img, ksize) 
+    # ksize = (3,3)
+    # img = cv.blur(img, ksize) 
 
     return img
 
@@ -117,7 +117,7 @@ def resize_img_predict(path: str, factor: int):
     resized_width = int(width / factor)
     resized_height = int(height / factor)
     dim = (resized_width, resized_height)
-    img = transform_contrast(img)
+    # img = transform_contrast(img)
     img = transform_blur(img)
     resized = cv.resize(img, dim, interpolation=cv.INTER_AREA)
     return resized
