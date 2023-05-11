@@ -28,17 +28,18 @@ def create_model(
     dense_base,
     conv_factor,
 ):
-    normalization = tf.keras.layers.Normalization(axis=None)
+    normalization = k.layers.Normalization(axis=None)
     normalization.adapt([0, 255.0])
 
     model = tf.keras.models.Sequential([
         k.layers.Input(input_shape),
-        k.layers.BatchNormalization(),
-        k.layers.Conv1D(conv_factor, 16, activation='relu'),
+        normalization,
+        k.layers.Conv1D(conv_factor, 8, activation='relu'),
         k.layers.MaxPooling1D(pool_size=7, strides=1, padding='valid'),
         k.layers.Conv1D(conv_factor * 2, 4, activation='relu'),
         k.layers.MaxPooling1D(pool_size=7, strides=1, padding='valid'),
         k.layers.Flatten(),
+        # k.layers.Dropout(rate=0.1),
         k.layers.Dense(dense_base, 'relu'),
         k.layers.Dense(labels_shape),
     ])
@@ -56,12 +57,16 @@ def train_model(
     y: np.ndarray = np.load('data/train_output.npy')
     y_min = np.min(y)
     y_max = np.max(y)
+    X_min = np.min(X)
+    X_max = np.max(X)
     input_shape = X.shape[1:]
     output_shape = y.shape[1:][0]
 
     print()
     print('y_min: {}'.format(y_min))
     print('y_max: {}'.format(y_max))
+    print('X_min: {}'.format(X_min))
+    print('X_max: {}'.format(X_max))
     print('input shape: {}'.format(input_shape))
     print('output shape: {}'.format(output_shape))
     print()
@@ -75,12 +80,20 @@ def train_model(
 
     model = create_model(input_shape, output_shape, dense_base, conv_factor)
     model.compile(optimizer='adam',
-                  loss="mae",)
+                  loss="mae",
+                  )
 
+    callback = tf.keras.callbacks.EarlyStopping(
+        monitor='val_loss', 
+        patience=320,
+        restore_best_weights=True,
+        verbose=1,
+        )
     history = model.fit(
         x=train_ds,
         epochs=epoch_size,
         validation_data=test_ds,
+        callbacks=[callback],
         verbose=1,
     )
     model.save('out')

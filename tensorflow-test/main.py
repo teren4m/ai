@@ -26,10 +26,10 @@ images = storage.get_info_by_key()
 # t.save_predict_data(images)
 
 m.train(
-    batch_size=40,
-    epoch_size=1000 ,
-    conv_factor=190,
-    dense_base=128,
+    batch_size=240,
+    epoch_size=10000 ,
+    conv_factor=32,
+    dense_base=1024,
     sma=50,
     remove = 100,
 )
