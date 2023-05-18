@@ -70,22 +70,27 @@ def train_model(
     print('input shape: {}'.format(input_shape))
     print('output shape: {}'.format(output_shape))
     print()
-
     dataset = tf.data.Dataset.from_tensor_slices((X, y)).shuffle(
-        buffer_size=100000,
-        reshuffle_each_iteration=True,
-    ).batch(batch_size)
+        buffer_size=15000,
+    )
 
     train_ds, test_ds = tf.keras.utils.split_dataset(dataset, left_size=0.75)
+    test_ds = test_ds.batch(batch_size)
+    train_ds = train_ds.repeat(count=10).shuffle(
+        buffer_size=15000,
+        reshuffle_each_iteration=True,
+    ).batch(batch_size)
 
     model = create_model(input_shape, output_shape, dense_base, conv_factor)
     model.compile(optimizer='adam',
                   loss="mae",
+                  metrics=['accuracy'],
                   )
 
     callback = tf.keras.callbacks.EarlyStopping(
-        monitor='val_loss', 
-        patience=400,
+        monitor='val_accuracy', 
+        patience=100,
+        mode='max',
         restore_best_weights=True,
         verbose=1,
         )

@@ -22,14 +22,14 @@ storage.init()
 images = storage.get_info_by_key()
 
 
-t.save_train_data(images)
+# t.save_train_data(images)
 # t.save_predict_data(images)
 
 m.train(
     batch_size=160,
-    epoch_size=10000 ,
-    conv_factor=128,
-    dense_base=128,
+    epoch_size=10000,
+    conv_factor=512,
+    dense_base=1024,
     sma=50,
     remove = 100,
 )
