@@ -60,6 +60,7 @@ images = images_shuffle
 # images = [img for img in images if 'condition' in img.metadata.keys() and img.metadata['condition'] == 'bad']
 # images = [img for img in images if 'condition' not in img.metadata.keys()]
 images = [img for img in images if 'mark' not in img.metadata.keys()]
+
 # images = [img for img in images if 'epoch' in img.metadata.keys() and 'mark' not in img.metadata.keys()]
 # images = [img for img in images if 'mark' in img.metadata.keys()]
 
